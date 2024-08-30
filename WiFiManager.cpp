@@ -3870,6 +3870,9 @@ void WiFiManager::WiFi_autoReconnect(){
 
 // Called when /update is requested
 void WiFiManager::handleUpdate() {
+if(!_showInfoUpdate)
+    return;
+
   #ifdef WM_DEBUG_LEVEL
 	DEBUG_WM(WM_DEBUG_VERBOSE,F("<- Handle update"));
   #endif
@@ -3889,6 +3892,9 @@ void WiFiManager::handleUpdate() {
 
 // upload via /u POST
 void WiFiManager::handleUpdating(){
+  if(!_showInfoUpdate)
+    return;
+
   // @todo
   // cannot upload files in captive portal, file select is not allowed, show message with link or hide
   // cannot upload if softreset after upload, maybe check for hard reset at least for dev, ERROR[11]: Invalid bootstrapping state, reset ESP8266 before updating
@@ -3981,6 +3987,9 @@ void WiFiManager::handleUpdating(){
 
 // upload and ota done, show status
 void WiFiManager::handleUpdateDone() {
+if(!_showInfoUpdate)
+    return;
+
 	DEBUG_WM(WM_DEBUG_VERBOSE, F("<- Handle update done"));
 	// if (captivePortal()) return; // If captive portal redirect instead of displaying the page
 

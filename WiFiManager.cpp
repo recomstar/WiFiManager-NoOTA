@@ -106,6 +106,11 @@ const char* WiFiManagerParameter::getValue() const {
   // Serial.println(printf("Address of _value is %p\n", (void *)_value)); 
   return _value;
 }
+
+void WiFiManagerParameter::setOnlyHTMLEnabled(bool enabled){
+  _onlyHtmlEnabled = enabled;
+}
+
 const char* WiFiManagerParameter::getID() const {
   return _id;
 }
@@ -123,6 +128,10 @@ int WiFiManagerParameter::getLabelPlacement() const {
 }
 const char* WiFiManagerParameter::getCustomHTML() const {
   return _customHTML;
+}
+
+const bool WiFiManagerParameter::isOnlyHTMLEnabled() const {
+  return _onlyHtmlEnabled;
 }
 
 /**
@@ -1768,7 +1777,7 @@ String WiFiManager::getParamOut(){
       // Input templating
       // "<br/><input id='{i}' name='{n}' maxlength='{l}' value='{v}' {c}>";
       // if no ID use customhtml for item, else generate from param string
-      if (_params[i]->getID() != NULL) {
+      if (_params[i]->getID() != NULL && !_params[i]->isOnlyHTMLEnabled()) {
         if(tok_I)pitem.replace(FPSTR(T_I), (String)FPSTR(S_parampre)+(String)i); // T_I id number
         if(tok_i)pitem.replace(FPSTR(T_i), _params[i]->getID()); // T_i id name
         if(tok_n)pitem.replace(FPSTR(T_n), _params[i]->getID()); // T_n id name alias

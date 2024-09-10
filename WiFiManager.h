@@ -210,6 +210,8 @@ class WiFiManagerParameter {
     ~WiFiManagerParameter();
     // WiFiManagerParameter& operator=(const WiFiManagerParameter& rhs);
 
+    void setOnlyHTMLEnabled(bool enabled);
+    const bool isOnlyHTMLEnabled() const;
     const char *getID() const;
     const char *getValue() const;
     const char *getLabel() const;
@@ -228,6 +230,7 @@ class WiFiManagerParameter {
     char       *_value;
     int         _length;
     int         _labelPlacement;
+    bool _onlyHtmlEnabled;
   
     const char *_customHTML;
     friend class WiFiManager;

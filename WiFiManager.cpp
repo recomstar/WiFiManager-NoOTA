@@ -130,6 +130,7 @@ const char* WiFiManagerParameter::getCustomHTML() const {
   return _customHTML;
 }
 
+//TODO implement own class later for this, this is ugly
 const bool WiFiManagerParameter::isOnlyHTMLEnabled() const {
   return _onlyHtmlEnabled;
 }

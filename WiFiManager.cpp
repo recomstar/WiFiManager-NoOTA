@@ -1283,7 +1283,7 @@ void WiFiManager::startWPS() {
 }
 #endif
 
-String WiFiManager::getHTTPHead(String title){
+String WiFiManager::getHTTPHead(String title, String classes){
   String page;
   page += FPSTR(HTTP_HEAD_START);
   page.replace(FPSTR(T_v), title);
@@ -1291,16 +1291,31 @@ String WiFiManager::getHTTPHead(String title){
   page += FPSTR(HTTP_STYLE);
   page += _customHeadElement;
 
-  if(_bodyClass != ""){
-    String p = FPSTR(HTTP_HEAD_END);
-    p.replace(FPSTR(T_c), _bodyClass); // add class str
-    page += p;
+  String p = FPSTR(HTTP_HEAD_END);
+  if (_bodyClass != "") {
+    if (classes != "") {
+      classes += " ";  // add spacing, if necessary
+    }
+    classes += _bodyClass;  // add class str
   }
-  else {
-    page += FPSTR(HTTP_HEAD_END);
-  } 
+  p.replace(FPSTR(T_c), classes);
+  page += p;
+
+  if (_customBodyHeader) {
+    page += _customBodyHeader;
+  }
 
   return page;
+}
+
+String WiFiManager::getHTTPEnd() {
+  String end = FPSTR(HTTP_END);
+
+  if (_customBodyFooter) {
+    end = String(_customBodyFooter) + end;
+  }
+
+  return end;
 }
 
 void WiFiManager::HTTPSend(const String &content){
@@ -1343,7 +1358,7 @@ void WiFiManager::handleRoot() {
   #endif
   if (captivePortal()) return; // If captive portal redirect instead of displaying the page
   handleRequest();
-  String page = getHTTPHead(_title); // @token options @todo replace options with title
+  String page = getHTTPHead(_title, FPSTR(C_root)); // @token options @todo replace options with title
   String str  = FPSTR(HTTP_ROOT_MAIN); // @todo custom title
   str.replace(FPSTR(T_t),_title);
   str.replace(FPSTR(T_v),configPortalActive ? _apName : (getWiFiHostname() + " - " + WiFi.localIP().toString())); // use ip if ap is not active for heading @todo use hostname?
@@ -1351,7 +1366,7 @@ void WiFiManager::handleRoot() {
   page += FPSTR(HTTP_PORTAL_OPTIONS);
   page += getMenuOut();
   reportStatus(page);
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
   if(_preloadwifiscan) WiFi_scanNetworks(_scancachetime,true); // preload wifiscan throttled, async
@@ -1368,7 +1383,7 @@ void WiFiManager::handleWifi(boolean scan) {
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP Wifi"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titlewifi)); // @token titlewifi
+  String page = getHTTPHead(FPSTR(S_titlewifi), FPSTR(C_wifi)); // @token titlewifi
   if (scan) {
     #ifdef WM_DEBUG_LEVEL
     // DEBUG_WM(WM_DEBUG_DEV,"refresh flag:",server->hasArg(F("refresh")));
@@ -1407,7 +1422,7 @@ void WiFiManager::handleWifi(boolean scan) {
   page += FPSTR(HTTP_SCAN_LINK);
   if(_showBack) page += FPSTR(HTTP_BACKBTN);
   reportStatus(page);
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
 
@@ -1424,7 +1439,7 @@ void WiFiManager::handleParam(){
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP Param"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titleparam)); // @token titlewifi
+  String page = getHTTPHead(FPSTR(S_titleparam), FPSTR(C_param)); // @token titlewifi
 
   String pitem = "";
 
@@ -1436,7 +1451,7 @@ void WiFiManager::handleParam(){
   page += FPSTR(HTTP_FORM_END);
   if(_showBack) page += FPSTR(HTTP_BACKBTN);
   reportStatus(page);
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
 
@@ -1889,16 +1904,16 @@ void WiFiManager::handleWifiSave() {
   String page;
 
   if(_ssid == ""){
-    page = getHTTPHead(FPSTR(S_titlewifisettings)); // @token titleparamsaved
+    page = getHTTPHead(FPSTR(S_titlewifisettings), FPSTR(C_wifi)); // @token titleparamsaved
     page += FPSTR(HTTP_PARAMSAVED);
   }
   else {
-    page = getHTTPHead(FPSTR(S_titlewifisaved)); // @token titlewifisaved
+    page = getHTTPHead(FPSTR(S_titlewifisaved), FPSTR(C_wifi)); // @token titlewifisaved
     page += FPSTR(HTTP_SAVED);
   }
 
   if(_showBack) page += FPSTR(HTTP_BACKBTN);
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   server->sendHeader(FPSTR(HTTP_HEAD_CORS), FPSTR(HTTP_HEAD_CORS_ALLOW_ALL)); // @HTTPHEAD send cors
   HTTPSend(page);
@@ -1922,10 +1937,10 @@ void WiFiManager::handleParamSave() {
 
   doParamSave();
 
-  String page = getHTTPHead(FPSTR(S_titleparamsaved)); // @token titleparamsaved
+  String page = getHTTPHead(FPSTR(S_titleparamsaved), FPSTR(C_param)); // @token titleparamsaved
   page += FPSTR(HTTP_PARAMSAVED);
   if(_showBack) page += FPSTR(HTTP_BACKBTN); 
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
 
@@ -1988,7 +2003,7 @@ void WiFiManager::handleInfo() {
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP Info"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titleinfo)); // @token titleinfo
+  String page = getHTTPHead(FPSTR(S_titleinfo), FPSTR(C_info)); // @token titleinfo
   reportStatus(page);
 
   uint16_t infos = 0;
@@ -2082,7 +2097,7 @@ void WiFiManager::handleInfo() {
   if(_showInfoErase) page += FPSTR(HTTP_ERASEBTN);
   if(_showBack) page += FPSTR(HTTP_BACKBTN);
   page += FPSTR(HTTP_HELP);
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
 
@@ -2333,8 +2348,9 @@ void WiFiManager::handleExit() {
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP Exit"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titleexit)); // @token titleexit
+  String page = getHTTPHead(FPSTR(S_titleexit), FPSTR(C_exit)); // @token titleexit
   page += FPSTR(S_exiting); // @token exiting
+  page += getHTTPEnd();
   // ('Logout', 401, {'WWW-Authenticate': 'Basic realm="Login required"'})
   server->sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate")); // @HTTPHEAD send cache
   HTTPSend(page);
@@ -2350,9 +2366,9 @@ void WiFiManager::handleReset() {
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP Reset"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titlereset)); //@token titlereset
+  String page = getHTTPHead(FPSTR(S_titlereset), FPSTR(C_restart)); //@token titlereset
   page += FPSTR(S_resetting); //@token resetting
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
 
   HTTPSend(page);
 
@@ -2375,7 +2391,7 @@ void WiFiManager::handleErase(boolean opt) {
   DEBUG_WM(WM_DEBUG_NOTIFY,F("<- HTTP Erase"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titleerase)); // @token titleerase
+  String page = getHTTPHead(FPSTR(S_titleerase), FPSTR(C_erase)); // @token titleerase
 
   bool ret = erase(opt);
 
@@ -2387,7 +2403,7 @@ void WiFiManager::handleErase(boolean opt) {
     #endif
   }
 
-  page += FPSTR(HTTP_END);
+  page += getHTTPEnd();
   HTTPSend(page);
 
   if(ret){
@@ -2480,8 +2496,9 @@ void WiFiManager::handleClose(){
   DEBUG_WM(WM_DEBUG_VERBOSE,F("<- HTTP close"));
   #endif
   handleRequest();
-  String page = getHTTPHead(FPSTR(S_titleclose)); // @token titleclose
+  String page = getHTTPHead(FPSTR(S_titleclose), FPSTR(C_close)); // @token titleclose
   page += FPSTR(S_closing); // @token closing
+  page += getHTTPEnd();
   HTTPSend(page);
 }
 
@@ -2907,6 +2924,26 @@ void WiFiManager::setCustomHeadElement(const char* html) {
 }
 
 /**
+ * set custom html at the top of the body
+ * custom element will be added after the body tag is opened, eg. to show a logo etc.
+ * @access public
+ * @param char element
+ */
+void WiFiManager::setCustomBodyHeader(const char* html) {
+    _customBodyHeader = html;
+}
+
+/**
+ * set custom html at the bottom of the body
+ * custom element will be added before the body tag is closed
+ * @access public
+ * @param char element
+ */
+void WiFiManager::setCustomBodyFooter(const char* html) {
+    _customBodyFooter = html;
+}
+
+/**
  * set custom menu html
  * custom element will be added to menu under custom menu item.
  * @access public
@@ -2976,7 +3013,7 @@ void WiFiManager::setShowStaticFields(boolean alwaysShow){
  */
 void WiFiManager::setShowDnsFields(boolean alwaysShow){
   if(_disableIpFields) _staShowDns = alwaysShow ? 1 : -1;
-  _staShowDns = alwaysShow ? 1 : 0;
+  else _staShowDns = alwaysShow ? 1 : 0;
 }
 
 /**
@@ -3888,14 +3925,14 @@ if(!_showInfoUpdate)
 	DEBUG_WM(WM_DEBUG_VERBOSE,F("<- Handle update"));
   #endif
 	if (captivePortal()) return; // If captive portal redirect instead of displaying the page
-	String page = getHTTPHead(_title); // @token options
+	String page = getHTTPHead(_title, FPSTR(C_update)); // @token options
 	String str = FPSTR(HTTP_ROOT_MAIN);
   str.replace(FPSTR(T_t), _title);
 	str.replace(FPSTR(T_v), configPortalActive ? _apName : (getWiFiHostname() + " - " + WiFi.localIP().toString())); // use ip if ap is not active for heading
 	page += str;
 
 	page += FPSTR(HTTP_UPDATE);
-	page += FPSTR(HTTP_END);
+	page += getHTTPEnd();
 
 	HTTPSend(page);
 
@@ -4004,7 +4041,7 @@ if(!_showInfoUpdate)
 	DEBUG_WM(WM_DEBUG_VERBOSE, F("<- Handle update done"));
 	// if (captivePortal()) return; // If captive portal redirect instead of displaying the page
 
-	String page = getHTTPHead(FPSTR(S_options)); // @token options
+	String page = getHTTPHead(FPSTR(S_options), FPSTR(C_update)); // @token options
 	String str  = FPSTR(HTTP_ROOT_MAIN);
   str.replace(FPSTR(T_t),_title);
 	str.replace(FPSTR(T_v), configPortalActive ? _apName : WiFi.localIP().toString()); // use ip if ap is not active for heading
@@ -4023,7 +4060,7 @@ if(!_showInfoUpdate)
 		page += FPSTR(HTTP_UPDATE_SUCCESS);
 		DEBUG_WM(F("[OTA] update ok"));
 	}
-	page += FPSTR(HTTP_END);
+	page += getHTTPEnd();
 
 	HTTPSend(page);
 

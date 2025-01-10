@@ -211,7 +211,7 @@ class WiFiManagerParameter {
     // WiFiManagerParameter& operator=(const WiFiManagerParameter& rhs);
 
     void setOnlyHTMLEnabled(bool enabled);
-    const bool isOnlyHTMLEnabled() const;
+    bool isOnlyHTMLEnabled() const;
     const char *getID() const;
     const char *getValue() const;
     const char *getLabel() const;
